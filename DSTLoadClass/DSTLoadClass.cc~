@@ -1,0 +1,107 @@
+#include "DSTLoadClass.hh"
+
+using namespace std;
+
+void DSTLoadClass::DSTProcess(int start,int end)
+{
+  ReadDataFile(start,end);
+  DSTtree = new TChain("DSTtree");
+  Load_TPCDSTTree(e);
+  Load_ODDSTTree(t);
+}
+
+void DSTLoadClass::ReadDataFile(int start, int end)
+{
+  string indir = GetDSTInputdir();
+  string middle="DST_Run";
+  string last=".root";
+  for(int i=start; i<=end; i++)
+    {
+      TString filename = Form("%s%06d%s",middle.c_str(),i,last.c_str());
+      filename.Prepend(indir.c_str());
+      if(!VerifyDataFile(filename))
+	continue;
+      else
+	DSTtree->Add(filename);
+    }
+}
+
+void DSTLoadClass::Load_TPCDSTTree(TPCDSTEvent &g)
+{
+  DSTtree->SetBranchAddress("runID",             &g.runID);
+  DSTtree->SetBranchAddress("tpc_eventID",       &g.tpc_eventID);
+  DSTtree->SetBranchAddress("tpc_event_type",    &g.tpc_event_type);
+  DSTtree->SetBranchAddress("tpc_gps_fine",      &g.tpc_gps_fine);
+  DSTtree->SetBranchAddress("tpc_gps_coarse",    &g.tpc_gps_coarse);
+  DSTtree->SetBranchAddress("tpc_s1_start_time", &g.tpc_s1_start_time);
+  DSTtree->SetBranchAddress("tpc_total_s1",      &g.tpc_total_s1);
+  DSTtree->SetBranchAddress("tpc_total_f90",     &g.tpc_total_f90);
+  DSTtree->SetBranchAddress("tpc_t_drift",       &g.tpc_t_drift);
+  DSTtree->SetBranchAddress("tpc_s1_late",       &g.tpc_s1_late);
+  DSTtree->SetBranchAddress("tpc_npulses",       &g.tpc_npulses);
+  DSTtree->SetBranchAddress("tpc_timestamp",     &g.tpc_timestamp);
+
+}
+
+void DSTLoadClass::Load_ODDSTTree(ODDSTEvent &h)
+{
+  DSTtree->SetBranchAddress("od_eventID",&h.od_eventID);
+  DSTtree->SetBranchAddress("od_gps_fine",&h.od_gps_fine);
+  DSTtree->SetBranchAddress("od_gps_coarse",&h.od_gps_coarse);
+  DSTtree->SetBranchAddress("od_timestamp", &h.od_timestamp);
+  DSTtree->SetBranchAddress("od_nclusters", &h.od_nclusters);
+  DSTtree->SetBranchAddress("od_wt_charge", &h.od_wt_charge);
+  DSTtree->SetBranchAddress("od_cluster_charge", &h.od_cluster_charge);
+  DSTtree->SetBranchAddress("od_cluster_start", &h.od_cluster_start); // time in ns
+  DSTtree->SetBranchAddress("od_cluster_height", &h.od_cluster_height);
+  DSTtree->SetBranchAddress("od_cluster_multiplicity", &h.od_cluster_multiplicity);
+  DSTtree->SetBranchAddress("od_cluster_pass_multcut", &h.od_cluster_pass_multcut);
+  DSTtree->SetBranchAddress("od_cluster_dtprompt", &h.od_cluster_dtprompt);
+}
+
+int DSTLoadClass::Colors(int pos)
+{
+  vector<int> color;
+  color.push_back(TColor::GetColor("#FF2007")); //red         0
+  color.push_back(TColor::GetColor("#5A1DE8")); //violet      1
+  color.push_back(TColor::GetColor("#000000"));
+  color.push_back(TColor::GetColor("#F73CFF")); //pink        5
+  color.push_back(TColor::GetColor("#1CFFDF")); //low green   7
+  color.push_back(TColor::GetColor("#1485CC")); //blue        4
+  color.push_back(TColor::GetColor("#FF791F")); //orange      6
+  color.push_back(TColor::GetColor("#AF2FCC")); //dark pink   8
+  color.push_back(TColor::GetColor("#E8A60C"));
+  color.push_back(TColor::GetColor("#B26618"));
+  color.push_back(TColor::GetColor("#79FFFF"));
+  color.push_back(TColor::GetColor("#11FF8F"));
+  color.push_back(TColor::GetColor("#59FF49")); //green       12
+
+  int size = (int) color.size();
+  return color.at(pos%size);
+}
+
+bool DSTLoadClass::VerifyDataFile(TString mainfile)
+{
+  ifstream NameCheck;
+  NameCheck.open(mainfile.Data());
+  if(!NameCheck.good())
+    { NameCheck.close();
+      return false;
+    }
+  else{
+    TFile *f = new TFile(mainfile);
+    if(!f->IsOpen() || f->IsZombie())
+      {
+	NameCheck.close();
+	f->Close();
+	return false;
+      }
+    else{
+      cout<<"Processing the data file: "<<mainfile<<endl;
+      NameCheck.close();
+      f->Close();
+      return true;
+    }
+  }
+}
+

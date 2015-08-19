@@ -1,0 +1,130 @@
+#include "G4DSLoadClass.hh"
+
+using namespace std;
+
+void G4DSLoadClass::Load_G4DSTree(dstreeEvent & g)
+{
+  dstree->SetBranchAddress("ev", &g.ev);
+  dstree->SetBranchAddress("pdg", &g.pdg);
+  dstree->SetBranchAddress("ene0", &g.ene0);
+  dstree->SetBranchAddress("tpcene", &g.tpcene);
+  dstree->SetBranchAddress("vetoene", &g.vetoene);
+  dstree->SetBranchAddress("muene", &g.muene);
+  dstree->SetBranchAddress("ene", &g.ene);
+  dstree->SetBranchAddress("x", &g.x);
+  dstree->SetBranchAddress("y", &g.y);
+  dstree->SetBranchAddress("z", &g.z);
+  dstree->SetBranchAddress("r", &g.r);
+  dstree->SetBranchAddress("px", &g.px);
+  dstree->SetBranchAddress("py", &g.py);
+  dstree->SetBranchAddress("pz", &g.pz);
+  dstree->SetBranchAddress("bx", &g.bx);
+  dstree->SetBranchAddress("by", &g.by);
+  dstree->SetBranchAddress("bz", &g.bz);
+  dstree->SetBranchAddress("npe", &g.npe);
+  dstree->SetBranchAddress("munpe", &g.munpe);
+  dstree->SetBranchAddress("vnpe", &g.vnpe);
+  dstree->SetBranchAddress("nph", &g.nph);
+  dstree->SetBranchAddress("ndaughters", &g.ndaughters);
+  dstree->SetBranchAddress("ndeposits", &g.ndeposits);
+  dstree->SetBranchAddress("dau_pdg", &g.dau_pdg);
+  dstree->SetBranchAddress("dau_trackid", &g.dau_trackid);
+  dstree->SetBranchAddress("dau_parenttrackid", &g.dau_parenttrackid);
+  dstree->SetBranchAddress("dau_time", &g.dau_time);
+  dstree->SetBranchAddress("dau_ene", &g.dau_ene);
+  dstree->SetBranchAddress("dau_x", &g.dau_x);
+  dstree->SetBranchAddress("dau_y", &g.dau_y);
+  dstree->SetBranchAddress("dau_z", &g.dau_z);
+  dstree->SetBranchAddress("dau_r", &g.dau_r);
+  dstree->SetBranchAddress("dau_px", &g.dau_px);
+  dstree->SetBranchAddress("dau_py", &g.dau_py);
+  dstree->SetBranchAddress("dau_pz", &g.dau_pz);
+  dstree->SetBranchAddress("dep_pdg", g.dep_pdg);
+  dstree->SetBranchAddress("dep_mat", g.dep_mat);
+  dstree->SetBranchAddress("dep_track", g.dep_track);
+  dstree->SetBranchAddress("dep_parenttrack", g.dep_parenttrack);
+  dstree->SetBranchAddress("dep_time", g.dep_time);
+  dstree->SetBranchAddress("dep_ene", g.dep_ene);
+  dstree->SetBranchAddress("dep_x", g.dep_x);
+  dstree->SetBranchAddress("dep_y", g.dep_y);
+  dstree->SetBranchAddress("dep_z", g.dep_z);
+  dstree->SetBranchAddress("dep_r", g.dep_r);
+  dstree->SetBranchAddress("ph_volume", &g.ph_volume);
+  dstree->SetBranchAddress("ph_pid", &g.ph_pid);
+  dstree->SetBranchAddress("ph_wl", &g.ph_wl);
+  dstree->SetBranchAddress("ph_x", &g.ph_x);
+  dstree->SetBranchAddress("ph_y", &g.ph_y);
+  dstree->SetBranchAddress("ph_z", &g.ph_z);
+  dstree->SetBranchAddress("ph_time", &g.ph_time);
+}
+
+void G4DSLoadClass::G4DSProcess(int start,int end)
+{
+  ReadDataFile(start,end);
+  dstree = new TChain("dstree");
+  Load_G4DSTree(d);
+}
+
+void G4DSLoadClass::ReadDataFile(int start, int end)
+{
+  string indir = GetG4DSInputdir();
+  string middle= GetG4DSMiddle();
+  string last=".root";
+  for(int i=start; i<=end; i++)
+    {
+      TString filename;
+      if(i==0)
+	filename.Form("%s%s",middle.c_str(),last.c_str());
+      else
+	filename.Form("%s_v%d%s",middle.c_str(),i,last.c_str());
+      filename.Prepend(indir.c_str());
+      if(!VerifyDataFile(filename))
+	continue;
+      else
+	dstree->Add(filename);
+    }
+}
+
+bool G4DSLoadClass::VerifyDataFile(TString mainfile)
+{
+  ifstream NameCheck;
+  NameCheck.open(mainfile.Data());
+  if(!NameCheck.good()){
+    NameCheck.close();
+    return false;
+  }else{
+    TFile *f = new TFile(mainfile);
+    if(!f->IsOpen() || f->IsZombie()){
+      NameCheck.close();
+      f->Close();
+      return false;
+    }else{
+      cout<<"Processing the data file: "<<mainfile<<endl;
+      NameCheck.close();
+      f->Close();
+      return true;
+    }
+  }
+}
+
+int G4DSLoadClass::Colors(int pos)
+{
+  vector<int> color;
+  color.push_back(TColor::GetColor("#FF2007")); //red         0
+  color.push_back(TColor::GetColor("#5A1DE8")); //violet      1
+  color.push_back(TColor::GetColor("#000000"));
+  color.push_back(TColor::GetColor("#F73CFF")); //pink        5
+  color.push_back(TColor::GetColor("#1CFFDF")); //low green   7
+  color.push_back(TColor::GetColor("#1485CC")); //blue        4
+  color.push_back(TColor::GetColor("#FF791F")); //orange      6
+  color.push_back(TColor::GetColor("#AF2FCC")); //dark pink   8
+  color.push_back(TColor::GetColor("#E8A60C"));
+  color.push_back(TColor::GetColor("#B26618"));
+  color.push_back(TColor::GetColor("#79FFFF"));
+  color.push_back(TColor::GetColor("#11FF8F"));
+  color.push_back(TColor::GetColor("#59FF49")); //green       12
+
+  int size = (int) color.size();
+  return color.at(pos%size);
+}
+

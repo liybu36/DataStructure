@@ -1,0 +1,37 @@
+#ifndef _ReconLoadClass_HH
+#define _ReconLoadClass_HH
+
+#include <iostream>
+
+#include "reconstruct.hh"
+
+class ReconLoadClass:public TObject
+{
+public:
+  ReconLoadClass():
+  {}
+
+  virtual ~ReconLoadClass(){}
+
+  ReconEvent r;
+  
+  void Load_ReconTree(ReconEvent &);
+  bool VerifyDataFile(TString);
+  int  Colors(int);
+  void ReadDataFile(int, int);
+  void  SetReconInputdir(string val) { reconinputdir=val; }
+  string GetReconInputdir() { return reconinputdir; }
+  void  SetReconmiddle(string val) { reconmiddle=val; }
+  string GetReconmiddle() { return reconmiddle; }
+  virtual void ReconProcess(int,int);
+  
+protected:
+  TChain *Recon;
+  
+private:
+  string reconinputdir;
+  string reconmiddle;
+  
+  ClassDef(ReconLoadClass,0);
+};
+#endif /* _ReconLoadClass_HH */
